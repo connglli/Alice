@@ -1,6 +1,7 @@
 import os
 import os.path
 
+
 # Set a dedicated folder for file I/O
 working_directory = "auto_gpt_workspace"
 
@@ -64,6 +65,7 @@ def delete_file(filename):
         return "File deleted successfully."
     except Exception as e:
         return "Error: " + str(e)
+
 
 def search_files(directory):
     found_files = []

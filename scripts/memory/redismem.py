@@ -5,8 +5,7 @@ from redis.commands.search.field import VectorField, TextField
 from redis.commands.search.query import Query
 from redis.commands.search.indexDefinition import IndexDefinition, IndexType
 import numpy as np
-
-from memory.base import MemoryProviderSingleton, get_ada_embedding
+from memory.base import MemoryProviderSingleton, get_flax_embedding, FLAX_EMBED_DIM
 
 
 SCHEMA = [
@@ -16,7 +15,7 @@ SCHEMA = [
         "HNSW",
         {
             "TYPE": "FLOAT32",
-            "DIM": 1536,
+            "DIM": FLAX_EMBED_DIM,
             "DISTANCE_METRIC": "COSINE"
         }
     ),
@@ -71,7 +70,7 @@ class RedisMemory(MemoryProviderSingleton):
         """
         if 'Command Error:' in data:
             return ""
-        vector = get_ada_embedding(data)
+        vector = get_flax_embedding(data)
         vector = np.array(vector).astype(np.float32).tobytes()
         data_dict = {
             b"data": data,
@@ -119,7 +118,7 @@ class RedisMemory(MemoryProviderSingleton):
 
         Returns: A list of the most relevant data.
         """
-        query_embedding = get_ada_embedding(data)
+        query_embedding = get_flax_embedding(data)
         base_query = f"*=>[KNN {num_relevant} @embedding $vector AS vector_score]"
         query = Query(base_query).return_fields(
             "data",

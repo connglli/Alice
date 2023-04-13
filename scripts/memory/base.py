@@ -1,16 +1,16 @@
 """Base class for memory providers."""
 import abc
-from config import AbstractSingleton, Config
-import openai
+from config import AbstractSingleton
+import sentence_transformers
 
-cfg = Config()
 
-def get_ada_embedding(text):
+FLAX_EMBED_MODEL = sentence_transformers.SentenceTransformer("flax-sentence-embeddings/all_datasets_v4_MiniLM-L6")
+FLAX_EMBED_DIM = 384
+
+
+def get_flax_embedding(text):
     text = text.replace("\n", " ")
-    if cfg.use_azure:
-        return openai.Embedding.create(input=[text], engine=cfg.get_azure_deployment_id_for_model("text-embedding-ada-002"))["data"][0]["embedding"]
-    else:
-        return openai.Embedding.create(input=[text], model="text-embedding-ada-002")["data"][0]["embedding"]
+    return FLAX_EMBED_MODEL.encode(text, show_progress_bar=False)
 
 
 class MemoryProviderSingleton(AbstractSingleton):

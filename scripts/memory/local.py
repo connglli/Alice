@@ -3,10 +3,10 @@ import orjson
 from typing import Any, List, Optional
 import numpy as np
 import os
-from memory.base import MemoryProviderSingleton, get_ada_embedding
+from memory.base import MemoryProviderSingleton, get_flax_embedding, FLAX_EMBED_DIM
 
 
-EMBED_DIM = 1536
+EMBED_DIM = FLAX_EMBED_DIM
 SAVE_OPTIONS = orjson.OPT_SERIALIZE_NUMPY | orjson.OPT_SERIALIZE_DATACLASS
 
 
@@ -58,7 +58,7 @@ class LocalCache(MemoryProviderSingleton):
             return ""
         self.data.texts.append(text)
 
-        embedding = get_ada_embedding(text)
+        embedding = get_flax_embedding(text)
 
         vector = np.array(embedding).astype(np.float32)
         vector = vector[np.newaxis, :]
@@ -109,7 +109,7 @@ class LocalCache(MemoryProviderSingleton):
 
         Returns: List[str]
         """
-        embedding = get_ada_embedding(text)
+        embedding = get_flax_embedding(text)
 
         scores = np.dot(self.data.embeddings, embedding)
 

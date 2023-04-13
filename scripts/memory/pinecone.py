@@ -1,7 +1,6 @@
 
 import pinecone
-
-from memory.base import MemoryProviderSingleton, get_ada_embedding
+from memory.base import MemoryProviderSingleton, get_flax_embedding, FLAX_EMBED_DIM
 
 
 class PineconeMemory(MemoryProviderSingleton):
@@ -9,7 +8,7 @@ class PineconeMemory(MemoryProviderSingleton):
         pinecone_api_key = cfg.pinecone_api_key
         pinecone_region = cfg.pinecone_region
         pinecone.init(api_key=pinecone_api_key, environment=pinecone_region)
-        dimension = 1536
+        dimension = FLAX_EMBED_DIM
         metric = "cosine"
         pod_type = "p1"
         table_name = "auto-gpt"
@@ -22,7 +21,7 @@ class PineconeMemory(MemoryProviderSingleton):
         self.index = pinecone.Index(table_name)
 
     def add(self, data):
-        vector = get_ada_embedding(data)
+        vector = get_flax_embedding(data)
         # no metadata here. We may wish to change that long term.
         resp = self.index.upsert([(str(self.vec_num), vector, {"raw_text": data})])
         _text = f"Inserting data into memory at index: {self.vec_num}:\n data: {data}"
@@ -42,7 +41,7 @@ class PineconeMemory(MemoryProviderSingleton):
         :param data: The data to compare to.
         :param num_relevant: The number of relevant data to return. Defaults to 5
         """
-        query_embedding = get_ada_embedding(data)
+        query_embedding = get_flax_embedding(data)
         results = self.index.query(query_embedding, top_k=num_relevant, include_metadata=True)
         sorted_results = sorted(results.matches, key=lambda x: x.score)
         return [str(item['metadata']["raw_text"]) for item in sorted_results]

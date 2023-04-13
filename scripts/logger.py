@@ -5,14 +5,14 @@ import re
 import time
 from logging import LogRecord
 from colorama import Fore
-
 from colorama import Style
-
 import speak
 from config import Config
 from config import Singleton
 
+
 cfg = Config()
+
 
 '''
 Logger that handle titles in different colors.
@@ -80,7 +80,7 @@ class Logger(metaclass=Singleton):
 
         if content:
             if isinstance(content, list):
-                content = " ".join(content)
+                content = "\n".join(content)
         else:
             content = ""
 
@@ -135,21 +135,26 @@ class TypingConsoleHandler(logging.StreamHandler):
         min_typing_speed = 0.05
         max_typing_speed = 0.01
 
-        msg = self.format(record)
-        try:
-            words = msg.split()
-            for i, word in enumerate(words):
-                print(word, end="", flush=True)
-                if i < len(words) - 1:
-                    print(" ", end="", flush=True)
-                typing_speed = random.uniform(min_typing_speed, max_typing_speed)
-                time.sleep(typing_speed)
-                # type faster after each word
-                min_typing_speed = min_typing_speed * 0.95
-                max_typing_speed = max_typing_speed * 0.95
+        content = self.format(record)
+        if content == "":
             print()
-        except Exception:
-            self.handleError(record)
+        else:
+            try:
+                for msg in content.split('\n'):
+                    words = msg.split()
+                    for i, word in enumerate(words):
+                        print(word, end="", flush=True)
+                        if i < len(words) - 1:
+                            print(" ", end="", flush=True)
+                        typing_speed = random.uniform(min_typing_speed, max_typing_speed)
+                        time.sleep(typing_speed)
+                        # type faster after each word
+                        min_typing_speed = min_typing_speed * 0.95
+                        max_typing_speed = max_typing_speed * 0.95
+                    print()
+            except Exception:
+                self.handleError(record)
+
 
 class ConsoleHandler(logging.StreamHandler):
     def emit(self, record):

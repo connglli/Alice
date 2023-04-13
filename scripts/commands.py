@@ -14,6 +14,7 @@ from duckduckgo_search import ddg
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
+
 cfg = Config()
 
 
@@ -23,6 +24,7 @@ def is_valid_int(value):
         return True
     except ValueError:
         return False
+
 
 def get_command(response):
     """Parse the response and return the command name and arguments"""
@@ -110,7 +112,7 @@ def execute_command(command_name, arguments):
                 return "You are not allowed to run local shell commands. To execute shell commands, EXECUTE_LOCAL_COMMANDS must be set to 'True' in your config. Do not attempt to bypass the restriction."
         elif command_name == "generate_image":
             return generate_image(arguments["prompt"])
-        elif command_name == "do_nothing":
+        elif command_name == "no_action":
             return "No action performed."
         elif command_name == "task_complete":
             shutdown()
@@ -134,6 +136,7 @@ def google_search(query, num_results=8):
         search_results.append(j)
 
     return json.dumps(search_results, ensure_ascii=False, indent=4)
+
 
 def google_official_search(query, num_results=8):
     """Return the results of a google search using the official Google API"""
@@ -170,6 +173,7 @@ def google_official_search(query, num_results=8):
 
     # Return the list of search result URLs
     return search_results_links
+
 
 def browse_website(url, question):
     """Browse a website and return the summary and links"""
@@ -250,7 +254,7 @@ def shutdown():
     quit()
 
 
-def start_agent(name, task, prompt, model=cfg.fast_llm_model):
+def start_agent(name, task, prompt):
     """Start an agent with a given name, task, and prompt"""
     global cfg
 
@@ -263,7 +267,7 @@ def start_agent(name, task, prompt, model=cfg.fast_llm_model):
     # Create agent
     if cfg.speak_mode:
         speak.say_text(agent_intro, 1)
-    key, ack = agents.create_agent(task, first_message, model)
+    key, ack = agents.create_agent(task, first_message)
 
     if cfg.speak_mode:
         speak.say_text(f"Hello {voice_name}. Your task is as follows. {task}.")

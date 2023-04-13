@@ -1,8 +1,10 @@
+import re
 import requests
+import new_bing as nbing
 from bs4 import BeautifulSoup
 from config import Config
-from llm_utils import create_chat_completion
 from urllib.parse import urlparse, urljoin
+
 
 cfg = Config()
 
@@ -78,7 +80,9 @@ def extract_hyperlinks(soup):
     """Extract hyperlinks from a BeautifulSoup object"""
     hyperlinks = []
     for link in soup.find_all('a', href=True):
-        hyperlinks.append((link.text, link['href']))
+        text, href = link.text, link['href']
+        if href.startswith('http://') or href.startswith('https://'):
+            hyperlinks.append((re.sub(r'\s+', ' ', text.strip()), href))
     return hyperlinks
 
 
@@ -134,7 +138,7 @@ def create_message(chunk, question):
 
 
 def summarize_text(text, question):
-    """Summarize text using the LLM model"""
+    """Summarize text using New Bing"""
     if not text:
         return "Error: No text to summarize"
 
@@ -148,11 +152,7 @@ def summarize_text(text, question):
         print(f"Summarizing chunk {i + 1} / {len(chunks)}")
         messages = [create_message(chunk, question)]
 
-        summary = create_chat_completion(
-            model=cfg.fast_llm_model,
-            messages=messages,
-            max_tokens=300,
-        )
+        summary = nbing.ask_messages(messages)
         summaries.append(summary)
 
     print(f"Summarized {len(chunks)} chunks.")
@@ -160,10 +160,6 @@ def summarize_text(text, question):
     combined_summary = "\n".join(summaries)
     messages = [create_message(combined_summary, question)]
 
-    final_summary = create_chat_completion(
-        model=cfg.fast_llm_model,
-        messages=messages,
-        max_tokens=300,
-    )
+    final_summary = nbing.ask_messages(messages)
 
     return final_summary

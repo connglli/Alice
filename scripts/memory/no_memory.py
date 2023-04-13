@@ -1,6 +1,6 @@
 from typing import Optional, List, Any
-
 from memory.base import MemoryProviderSingleton
+
 
 class NoMemory(MemoryProviderSingleton):
     def __init__(self, cfg):

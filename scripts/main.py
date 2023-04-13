@@ -18,21 +18,13 @@ import argparse
 from logger import logger
 import logging
 
+
 cfg = Config()
 
-def check_openai_api_key():
-    """Check if the OpenAI API key is set in config.py or as an environment variable."""
-    if not cfg.openai_api_key:
-        print(
-            Fore.RED +
-            "Please set your OpenAI API key in config.py or as an environment variable."
-        )
-        print("You can get your key from https://beta.openai.com/account/api-keys")
-        exit(1)
 
 def attempt_to_fix_json_by_finding_outermost_brackets(json_string):
     if cfg.speak_mode and cfg.debug_mode:
-      speak.say_text("I have received an invalid JSON response from the OpenAI API. Trying to fix it now.")
+      speak.say_text("I have received an invalid JSON response. Trying to fix it now.")
     logger.typewriter_log("Attempting to fix JSON by finding outermost brackets\n")
 
     try:
@@ -57,6 +49,7 @@ def attempt_to_fix_json_by_finding_outermost_brackets(json_string):
         json_string = {}
 
     return json_string
+
 
 def print_assistant_thoughts(assistant_reply):
     """Prints the assistant's thoughts to the console"""
@@ -118,66 +111,12 @@ def print_assistant_thoughts(assistant_reply):
     except json.decoder.JSONDecodeError as e:
         logger.error("Error: Invalid JSON\n", assistant_reply)
         if cfg.speak_mode:
-            speak.say_text("I have received an invalid JSON response from the OpenAI API. I cannot ignore this response.")
+            speak.say_text("I have received an invalid JSON response. I cannot ignore this response.")
 
     # All other errors, return "Error: + error message"
     except Exception as e:
         call_stack = traceback.format_exc()
         logger.error("Error: \n", call_stack)
-
-
-def load_variables(config_file="config.yaml"):
-    """Load variables from yaml file if it exists, otherwise prompt the user for input"""
-    try:
-        with open(config_file) as file:
-            config = yaml.load(file, Loader=yaml.FullLoader)
-        ai_name = config.get("ai_name")
-        ai_role = config.get("ai_role")
-        ai_goals = config.get("ai_goals")
-    except FileNotFoundError:
-        ai_name = ""
-        ai_role = ""
-        ai_goals = []
-
-    # Prompt the user for input if config file is missing or empty values
-    if not ai_name:
-        ai_name = utils.clean_input("Name your AI: ")
-        if ai_name == "":
-            ai_name = "Entrepreneur-GPT"
-
-    if not ai_role:
-        ai_role = utils.clean_input(f"{ai_name} is: ")
-        if ai_role == "":
-            ai_role = "an AI designed to autonomously develop and run businesses with the sole goal of increasing your net worth."
-
-    if not ai_goals:
-        print("Enter up to 5 goals for your AI: ")
-        print("For example: \nIncrease net worth, Grow Twitter Account, Develop and manage multiple businesses autonomously'")
-        print("Enter nothing to load defaults, enter nothing when finished.")
-        ai_goals = []
-        for i in range(5):
-            ai_goal = utils.clean_input(f"Goal {i+1}: ")
-            if ai_goal == "":
-                break
-            ai_goals.append(ai_goal)
-        if len(ai_goals) == 0:
-            ai_goals = ["Increase net worth", "Grow Twitter Account", "Develop and manage multiple businesses autonomously"]
-
-    # Save variables to yaml file
-    config = {"ai_name": ai_name, "ai_role": ai_role, "ai_goals": ai_goals}
-    with open(config_file, "w") as file:
-        documents = yaml.dump(config, file)
-
-    prompt = data.load_prompt()
-    prompt_start = """Your decisions must always be made independently without seeking user assistance. Play to your strengths as a LLM and pursue simple strategies with no legal complications."""
-
-    # Construct full prompt
-    full_prompt = f"You are {ai_name}, {ai_role}\n{prompt_start}\n\nGOALS:\n\n"
-    for i, goal in enumerate(ai_goals):
-        full_prompt += f"{i+1}. {goal}\n"
-
-    full_prompt += f"\n\n{prompt}"
-    return full_prompt
 
 
 def construct_prompt():
@@ -214,7 +153,7 @@ def prompt_user():
     ai_name = ""
     # Construct the prompt
     logger.typewriter_log(
-        "Welcome to Auto-GPT! ",
+        "Welcome to Alice! ",
         Fore.GREEN,
         "Enter the name of your AI and its role below. Entering nothing will load defaults.",
         speak_text=True)
@@ -262,9 +201,11 @@ def prompt_user():
     config = AIConfig(ai_name, ai_role, ai_goals)
     return config
 
+
 def parse_arguments():
     """Parses the arguments passed to the script"""
     global cfg
+
     cfg.set_debug_mode(False)
     cfg.set_continuous_mode(False)
     cfg.set_speak_mode(False)
@@ -273,8 +214,6 @@ def parse_arguments():
     parser.add_argument('--continuous', action='store_true', help='Enable Continuous Mode')
     parser.add_argument('--speak', action='store_true', help='Enable Speak Mode')
     parser.add_argument('--debug', action='store_true', help='Enable Debug Mode')
-    parser.add_argument('--gpt3only', action='store_true', help='Enable GPT3.5 Only Mode')
-    parser.add_argument('--gpt4only', action='store_true', help='Enable GPT4 Only Mode')
     parser.add_argument('--use-memory', '-m', dest="memory_type", help='Defines which Memory backend to use')
     args = parser.parse_args()
 
@@ -294,18 +233,6 @@ def parse_arguments():
         logger.typewriter_log("Speak Mode: ", Fore.GREEN, "ENABLED")
         cfg.set_speak_mode(True)
 
-    if args.gpt3only:
-        logger.typewriter_log("GPT3.5 Only Mode: ", Fore.GREEN, "ENABLED")
-        cfg.set_smart_llm_model(cfg.fast_llm_model)
-
-    if args.gpt4only:
-        logger.typewriter_log("GPT4 Only Mode: ", Fore.GREEN, "ENABLED")
-        cfg.set_fast_llm_model(cfg.smart_llm_model)
-
-    if args.debug:
-        logger.typewriter_log("Debug Mode: ", Fore.GREEN, "ENABLED")
-        cfg.set_debug_mode(True)
-
     if args.memory_type:
         supported_memory = get_supported_memory_backends()
         chosen = args.memory_type
@@ -316,35 +243,51 @@ def parse_arguments():
             cfg.memory_backend = chosen
 
 
-# TODO: fill in llm values here
-check_openai_api_key()
 parse_arguments()
 logger.set_level(logging.DEBUG if cfg.debug_mode else logging.INFO)
 ai_name = ""
 prompt = construct_prompt()
-# print(prompt)
+if cfg.debug_mode:
+    logger.typewriter_log("SYSTEM: ", Fore.YELLOW, prompt)
 # Initialize variables
 full_message_history = []
 result = None
 next_action_count = 0
 # Make a constant:
-user_input = "Determine which next command to use, and respond using the format specified above:"
+user_input = "Determine which command in COMMANDS list to use first, and respond using the format specified before."
 
 # Initialize memory and make sure it is empty.
 # this is particularly important for indexing and referencing pinecone memory
 memory = get_memory(cfg, init=True)
 print('Using memory of type: ' + memory.__class__.__name__)
 
+# Connect and initialize our AI
+with Spinner("Connecting to AI..."):
+    try:
+        assistant_reply = chat.conn(prompt)
+    except Exception as e:
+        assistant_reply_json = e
+    else:
+        assistant_reply_json = fix_and_parse_json(assistant_reply)
+        if not isinstance(assistant_reply_json, dict):
+            assistant_reply_json = {
+                "thoughts": {
+                    "text": assistant_reply_json
+                }
+            }
+if isinstance(assistant_reply_json, Exception):
+    logger.typewriter_log("AI CONNECTION FAILED: ", Fore.RED, str(assistant_reply_json))
+    chat.close()
+    exit(1)
+else:
+    logger.typewriter_log("AI CONNECTED: ", Fore.YELLOW, 
+                          assistant_reply_json.get("thoughts", {}).get("text", ""))
+
 # Interaction Loop
 while True:
     # Send message to AI, get response
     with Spinner("Thinking... "):
-        assistant_reply = chat.chat_with_ai(
-            prompt,
-            user_input,
-            full_message_history,
-            memory,
-            cfg.fast_token_limit) # TODO: This hardcodes the model to use GPT3.5. Make this an argument
+        assistant_reply = chat.chat(user_input, full_message_history, memory)
 
     # Print Assistant thoughts
     print_assistant_thoughts(assistant_reply)
@@ -370,7 +313,7 @@ while True:
             f"Enter 'y' to authorise command, 'y -N' to run N continuous commands, 'n' to exit program, or enter feedback for {ai_name}...",
             flush=True)
         while True:
-            console_input = utils.clean_input(Fore.MAGENTA + "Input:" + Style.RESET_ALL)
+            console_input = utils.clean_input(Fore.MAGENTA + "Input: " + Style.RESET_ALL)
             if console_input.lower().rstrip() == "y":
                 user_input = "GENERATE NEXT COMMAND JSON"
                 break
@@ -392,9 +335,9 @@ while True:
 
         if user_input == "GENERATE NEXT COMMAND JSON":
             logger.typewriter_log(
-            "-=-=-=-=-=-=-= COMMAND AUTHORISED BY USER -=-=-=-=-=-=-=",
-            Fore.MAGENTA,
-            "")
+                "-=-=-=-=-=-=-= COMMAND AUTHORISED BY USER -=-=-=-=-=-=-=",
+                Fore.MAGENTA,
+                "")
         elif user_input == "EXIT":
             print("Exiting...", flush=True)
             break
@@ -415,9 +358,9 @@ while True:
         if next_action_count > 0:
             next_action_count -= 1
 
-    memory_to_add = f"Assistant Reply: {assistant_reply} " \
-                    f"\nResult: {result} " \
-                    f"\nHuman Feedback: {user_input} "
+    memory_to_add = f"Assistant Reply: {assistant_reply} \n" \
+                    f"Result: {result} \n" \
+                    f"Human Feedback: {user_input} "
 
     memory.add(memory_to_add)
 
@@ -431,3 +374,5 @@ while True:
             chat.create_chat_message(
                 "system", "Unable to execute command"))
         logger.typewriter_log("SYSTEM: ", Fore.YELLOW, "Unable to execute command")
+
+chat.close()

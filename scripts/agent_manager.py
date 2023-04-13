@@ -1,23 +1,19 @@
-from llm_utils import create_chat_completion
+import new_bing as nbing
+
 
 next_key = 0
-agents = {}  # key, (task, full_message_history, model)
+agents = {}  # key, (task, full_message_history)
 
-# Create new GPT agent
-# TODO: Centralise use of create_chat_completion() to globally enforce token limit
 
-def create_agent(task, prompt, model):
+def create_agent(task, prompt):
     """Create a new agent and return its key"""
     global next_key
     global agents
 
     messages = [{"role": "user", "content": prompt}, ]
 
-    # Start GPT instance
-    agent_reply = create_chat_completion(
-        model=model,
-        messages=messages,
-    )
+    # Start New Bing instance
+    agent_reply = nbing.ask_messages(messages)
 
     # Update full message history
     messages.append({"role": "assistant", "content": agent_reply})
@@ -27,7 +23,7 @@ def create_agent(task, prompt, model):
     # are deleted
     next_key += 1
 
-    agents[key] = (task, messages, model)
+    agents[key] = (task, messages)
 
     return key, agent_reply
 
@@ -36,16 +32,13 @@ def message_agent(key, message):
     """Send a message to an agent and return its response"""
     global agents
 
-    task, messages, model = agents[int(key)]
+    task, messages = agents[int(key)]
 
     # Add user message to message history before sending to agent
     messages.append({"role": "user", "content": message})
 
-    # Start GPT instance
-    agent_reply = create_chat_completion(
-        model=model,
-        messages=messages,
-    )
+    # Start New Bing instance
+    agent_reply = nbing.ask_messages(messages)
 
     # Update full message history
     messages.append({"role": "assistant", "content": agent_reply})
