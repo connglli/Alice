@@ -45,6 +45,11 @@ def message_agent(key, message):
     return agent_reply
 
 
+def has_agent(key):
+    """Return if there exists a agent with key"""
+    return isinstance(key, str) and key in agents
+
+
 def list_agents():
     """Return a list of all agents"""
     global agents
