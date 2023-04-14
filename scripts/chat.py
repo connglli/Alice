@@ -52,8 +52,7 @@ def chat(user_input, full_message_history, permanent_memory):
 
     if len(full_message_history) > 0:
         question = f"{full_message_history[-1]['content']}\n\n" \
-                   f"{_role_desc}\n\n" \
-                   f"Based on the above information, {user_input}"
+                   f"Based on the above information: {user_input}"
         relevant_memory = permanent_memory.get_relevant(str(full_message_history[-5:]), 10)
     else:
         question = user_input

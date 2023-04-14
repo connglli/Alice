@@ -26,7 +26,7 @@ ai_name = ""
 def attempt_to_fix_json_by_finding_outermost_brackets(json_string):
     if cfg.speak_mode and cfg.debug_mode:
       speak.say_text("I have received an invalid JSON response. Trying to fix it now.")
-    logger.typewriter_log("Attempting to fix JSON by finding outermost brackets\n")
+    logger.typewriter_log("Attempting to fix JSON by finding outermost brackets")
 
     try:
         # Use regex to search for JSON objects
@@ -46,7 +46,7 @@ def attempt_to_fix_json_by_finding_outermost_brackets(json_string):
     except (json.JSONDecodeError, ValueError) as e:
         if cfg.speak_mode:
             speak.say_text("Didn't work. I will have to ignore this response then.")
-        logger.error("Error: Invalid JSON, setting it to empty JSON now.\n")
+        logger.error("Error: Invalid JSON, setting it to empty JSON now.")
         json_string = {}
 
     return json_string
