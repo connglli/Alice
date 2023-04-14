@@ -180,30 +180,40 @@ def parse_arguments():
 
 
 def parse_assistant_reply(assistant_reply):
+    FORMAT_ENFORCEMENT = "Your response must adhere to the RESPONSE JSON FORMAT format"
+
     try:
         assistant_reply_json = fix_and_parse_json(assistant_reply)
+
+        if not isinstance(assistant_reply_json, dict):
+            raise ValueError("Response is not a JSON object")
 
     # JSON Decoding error
     except json.decoder.JSONDecodeError:
         logger.error("Error: Invalid JSON\n", assistant_reply)
-        return None, "error__json_decode_error", "Invalid JSON object. Your response must adhere to the RESPONSE JSON FORMAT format."
+        return None, "error__json_decode_error", f"Invalid JSON object. {FORMAT_ENFORCEMENT}."
+
+    # Not a JSON object
+    except ValueError:
+        logger.error("Error: Invalid JSON\n", assistant_reply)
+        return None, "error__not_an_object", f"Invalid JSON object. {FORMAT_ENFORCEMENT}."
 
     # All other errors, return "Error: + error message"
     except Exception as e:
         call_stack = traceback.format_exc()
         logger.error(f"Error: {e}\n", call_stack)
-        return None, "error__other_exceptions", f"{e}. Your response must adhere to the RESPONSE JSON FORMAT format."
+        return None, "error__other_exceptions", f"{e}. {FORMAT_ENFORCEMENT}."
 
     # Received JSON object
     else:
         thoughts = assistant_reply_json.get("thoughts")
 
         if "command" not in assistant_reply_json:
-            return thoughts, "error__no_command" , "Missing 'command' object in JSON. Your response must adhere to the RESPONSE JSON FORMAT format."
+            return thoughts, "error__no_command" , f"Missing 'command' object in JSON. {FORMAT_ENFORCEMENT}."
 
         command = assistant_reply_json["command"]
         if "name" not in command:
-            return thoughts, "error__no_command_name", "Missing 'name' field in 'command' object. Your response must adhere to the RESPONSE JSON FORMAT format."
+            return thoughts, "error__no_command_name", f"Missing 'name' field in 'command' object. {FORMAT_ENFORCEMENT}."
 
         # Use an empty dictionary if 'args' field is not present in 'command' object
         return thoughts, command["name"], command.get("args", {})
