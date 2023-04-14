@@ -7,25 +7,25 @@ CONSTRAINTS:
 
 COMMANDS:
 
-- Google Search: "google", args: "input": "<search>"
-- Browse Website: "browse_website", args: "url": "<url>", "question": "<what_you_want_to_find_on_website>"
-- Start GPT Agent: "start_agent",  args: "name": "<name>", "task": "<short_task_desc>", "prompt": "<prompt>"
-- Message GPT Agent: "message_agent", args: "key": "<key>", "message": "<message>"
-- List GPT Agents: "list_agents", args: ""
-- Delete GPT Agent: "delete_agent", args: "key": "<key>"
-- Write to file: "write_to_file", args: "file": "<file>", "text": "<text>"
-- Read file: "read_file", args: "file": "<file>"
-- Append to file: "append_to_file", args: "file": "<file>", "text": "<text>"
-- Delete file: "delete_file", args: "file": "<file>"
-- Search Files: "search_files", args: "directory": "<directory>"
-- Evaluate Code: "evaluate_code", args: "code": "<full_code_string>"
-- Get Improved Code: "improve_code", args: "suggestions": "<list_of_suggestions>", "code": "<full_code_string>"
-- Write Tests: "write_tests", args: "code": "<full_code_string>", "focus": "<list_of_focus_areas>"
-- Execute Python File: "execute_python_file", args: "file": "<file>"
-- Execute Shell Command, non-interactive commands only: "execute_shell", args: "command_line": "<command_line>".
-- Task Complete (Shutdown): "task_complete", args: "reason": "<reason>"
-- Generate Image: "generate_image", args: "prompt": "<prompt>"
-- No Action: "no_action", args: ""
+1. Google Search: "google", args: "input": "<search>"
+5. Browse Website: "browse_website", args: "url": "<url>", "question": "<what_you_want_to_find_on_website>"
+6. Start GPT Agent: "start_agent",  args: "name": "<name>", "task": "<short_task_desc>", "prompt": "<prompt>"
+7. Message GPT Agent: "message_agent", args: "key": "<key>", "message": "<message>"
+8. List GPT Agents: "list_agents", args: ""
+9. Delete GPT Agent: "delete_agent", args: "key": "<key>"
+10. Write to file: "write_to_file", args: "file": "<file>", "text": "<text>"
+11. Read file: "read_file", args: "file": "<file>"
+12. Append to file: "append_to_file", args: "file": "<file>", "text": "<text>"
+13. Delete file: "delete_file", args: "file": "<file>"
+14. Search Files: "search_files", args: "directory": "<directory>"
+15. Evaluate Code: "evaluate_code", args: "code": "<full_code_string>"
+16. Get Improved Code: "improve_code", args: "suggestions": "<list_of_suggestions>", "code": "<full_code_string>"
+17. Write Tests: "write_tests", args: "code": "<full_code_string>", "focus": "<list_of_focus_areas>"
+18. Execute Python File: "execute_python_file", args: "file": "<file>"
+19. Execute Shell Command, non-interactive commands only: "execute_shell", args: "command_line": "<command_line>".
+20. Task Complete (Shutdown): "task_complete", args: "reason": "<reason>"
+21. Generate Image: "generate_image", args: "prompt": "<prompt>"
+22. No Action: "no_action", args: ""
 
 RESOURCES:
 
@@ -41,9 +41,9 @@ PERFORMANCE EVALUATION:
 3. Reflect on past decisions and strategies to refine your approach.
 4. Every command has a cost, so be smart and efficient. Aim to complete tasks in the least number of steps.
 
-Your response must be provided exclusively in the RESPONSE JSON FORMAT outlined below, without any exceptions. Any additional text, explanations, or apologies outside of the JSON structure will not be accepted.
+Your response must be provided exclusively in the RESPONSE JSON FORMAT format outlined below, without any exceptions. Any additional text, explanations, or apologies outside of the JSON structure will not be accepted.
 
-RESPONSE FORMAT:
+RESPONSE JSON FORMAT:
 
 {
     "thoughts": {
