@@ -1,6 +1,5 @@
 import new_bing as nbing
 
-
 next_key = 0
 agents = {}  # key, (task, full_message_history)
 

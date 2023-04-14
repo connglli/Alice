@@ -1,19 +1,23 @@
-import browse
-import json
-from memory import get_memory
 import datetime
+import json
+
 import agent_manager as agents
+import ai_functions as ai
+import browse
 import speak
 from config import Config
-import ai_functions as ai
-from file_operations import read_file, write_to_file, append_to_file, delete_file, search_files
-from execute_code import execute_python_file, execute_shell
-from json_parser import fix_and_parse_json
-from image_gen import generate_image
 from duckduckgo_search import ddg
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
-
+from execute_code import execute_python_file, execute_shell
+from file_operations import (
+    append_to_file,
+    delete_file,
+    read_file,
+    search_files,
+    write_to_file,
+)
+from image_gen import generate_image
+from json_parser import fix_and_parse_json
+from memory import get_memory
 
 cfg = Config()
 
@@ -52,7 +56,7 @@ def get_command(response):
         return "Error:", str(e)
 
 
-def execute_command(command_name, arguments):
+def execute_command(command_name, arguments):  # noqa: C901
     """Execute the command and return the result"""
     memory = get_memory(cfg)
 
@@ -140,9 +144,10 @@ def google_search(query, num_results=8):
 
 def google_official_search(query, num_results=8):
     """Return the results of a google search using the official Google API"""
+    import json
+
     from googleapiclient.discovery import build
     from googleapiclient.errors import HttpError
-    import json
 
     try:
         # Get the Google API key and Custom Search Engine ID from the config file
@@ -202,50 +207,50 @@ def get_hyperlinks(url):
     return link_list
 
 
-def commit_memory(string):
-    """Commit a string to memory"""
-    _text = f"""Committing memory with string "{string}" """
-    mem.permanent_memory.append(string)
-    return _text
+# def commit_memory(string):
+#     """Commit a string to memory"""
+#     _text = f"""Committing memory with string "{string}" """
+#     mem.permanent_memory.append(string)
+#     return _text
 
 
-def delete_memory(key):
-    """Delete a memory with a given key"""
-    if key >= 0 and key < len(mem.permanent_memory):
-        _text = "Deleting memory with key " + str(key)
-        del mem.permanent_memory[key]
-        print(_text)
-        return _text
-    else:
-        print("Invalid key, cannot delete memory.")
-        return None
+# def delete_memory(key):
+#     """Delete a memory with a given key"""
+#     if key >= 0 and key < len(mem.permanent_memory):
+#         _text = "Deleting memory with key " + str(key)
+#         del mem.permanent_memory[key]
+#         print(_text)
+#         return _text
+#     else:
+#         print("Invalid key, cannot delete memory.")
+#         return None
 
 
-def overwrite_memory(key, string):
-    """Overwrite a memory with a given key and string"""
-    # Check if the key is a valid integer
-    if is_valid_int(key):
-        key_int = int(key)
-        # Check if the integer key is within the range of the permanent_memory list
-        if 0 <= key_int < len(mem.permanent_memory):
-            _text = "Overwriting memory with key " + str(key) + " and string " + string
-            # Overwrite the memory slot with the given integer key and string
-            mem.permanent_memory[key_int] = string
-            print(_text)
-            return _text
-        else:
-            print(f"Invalid key '{key}', out of range.")
-            return None
-    # Check if the key is a valid string
-    elif isinstance(key, str):
-        _text = "Overwriting memory with key " + key + " and string " + string
-        # Overwrite the memory slot with the given string key and string
-        mem.permanent_memory[key] = string
-        print(_text)
-        return _text
-    else:
-        print(f"Invalid key '{key}', must be an integer or a string.")
-        return None
+# def overwrite_memory(key, string):
+#     """Overwrite a memory with a given key and string"""
+#     # Check if the key is a valid integer
+#     if is_valid_int(key):
+#         key_int = int(key)
+#         # Check if the integer key is within the range of the permanent_memory list
+#         if 0 <= key_int < len(mem.permanent_memory):
+#             _text = "Overwriting memory with key " + str(key) + " and string " + string
+#             # Overwrite the memory slot with the given integer key and string
+#             mem.permanent_memory[key_int] = string
+#             print(_text)
+#             return _text
+#         else:
+#             print(f"Invalid key '{key}', out of range.")
+#             return None
+#     # Check if the key is a valid string
+#     elif isinstance(key, str):
+#         _text = "Overwriting memory with key " + key + " and string " + string
+#         # Overwrite the memory slot with the given string key and string
+#         mem.permanent_memory[key] = string
+#         print(_text)
+#         return _text
+#     else:
+#         print(f"Invalid key '{key}', must be an integer or a string.")
+#         return None
 
 
 def shutdown():

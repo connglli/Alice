@@ -1,12 +1,12 @@
 """Redis memory provider."""
 from typing import Any, List, Optional
-import redis
-from redis.commands.search.field import VectorField, TextField
-from redis.commands.search.query import Query
-from redis.commands.search.indexDefinition import IndexDefinition, IndexType
-import numpy as np
-from memory.base import MemoryProviderSingleton, get_flax_embedding, FLAX_EMBED_DIM
 
+import numpy as np
+import redis
+from memory.base import FLAX_EMBED_DIM, MemoryProviderSingleton, get_flax_embedding
+from redis.commands.search.field import TextField, VectorField
+from redis.commands.search.indexDefinition import IndexDefinition, IndexType
+from redis.commands.search.query import Query
 
 SCHEMA = [
     TextField("data"),

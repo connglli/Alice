@@ -1,7 +1,6 @@
 import new_bing as nbing
 from config import Config
 
-
 cfg = Config()
 
 

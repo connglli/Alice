@@ -4,12 +4,10 @@ import random
 import re
 import time
 from logging import LogRecord
-from colorama import Fore
-from colorama import Style
-import speak
-from config import Config
-from config import Singleton
 
+import speak
+from colorama import Fore, Style
+from config import Config, Singleton
 
 cfg = Config()
 
@@ -172,11 +170,11 @@ To use this formatter, make sure to pass 'color', 'title' as log extras.
 class AutoGptFormatter(logging.Formatter):
     def format(self, record: LogRecord) -> str:
         if (hasattr(record, 'color')):
-            record.title_color = getattr(record, 'color') + getattr(record, 'title') + " " + Style.RESET_ALL
+            record.title_color = record.color + record.title + " " + Style.RESET_ALL
         else:
-            record.title_color = getattr(record, 'title')
+            record.title_color = record.title
         if hasattr(record, 'msg'):
-            record.message_no_color = remove_color_codes(getattr(record, 'msg'))
+            record.message_no_color = remove_color_codes(record.msg)
         else:
             record.message_no_color = ''
         return super().format(record)

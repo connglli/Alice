@@ -1,5 +1,6 @@
-import re
 import json
+import re
+
 from config import Config
 
 cfg = Config()
@@ -75,7 +76,7 @@ def balance_braces(json_string: str) -> str:
     try:
         json.loads(json_string)
         return json_string
-    except json.JSONDecodeError as e:
+    except json.JSONDecodeError:
         pass
 
 

@@ -1,23 +1,19 @@
+import argparse
 import json
-import random
-import commands as cmd
-import utils
-from memory import get_memory, get_supported_memory_backends
-import data
+import logging
+import traceback
+
 import chat
-from colorama import Fore, Style
-from spinner import Spinner
-import time
+import commands as cmd
 import speak
+import utils
+from ai_config import AIConfig
+from colorama import Fore, Style
 from config import Config
 from json_parser import fix_and_parse_json
-from ai_config import AIConfig
-import traceback
-import yaml
-import argparse
 from logger import logger
-import logging
-
+from memory import get_memory, get_supported_memory_backends
+from spinner import Spinner
 
 cfg = Config()
 ai_name = ""
@@ -43,7 +39,7 @@ def attempt_to_fix_json_by_finding_outermost_brackets(json_string):
         else:
             raise ValueError("No valid JSON object found")
 
-    except (json.JSONDecodeError, ValueError) as e:
+    except (json.JSONDecodeError, ValueError):
         if cfg.speak_mode:
             speak.say_text("Didn't work. I will have to ignore this response then.")
         logger.error("Error: Invalid JSON, setting it to empty JSON now.")
@@ -52,7 +48,7 @@ def attempt_to_fix_json_by_finding_outermost_brackets(json_string):
     return json_string
 
 
-def print_assistant_thoughts(assistant_reply):
+def print_assistant_thoughts(assistant_reply):  # noqa: C901
     """Prints the assistant's thoughts to the console"""
     global ai_name
     global cfg
@@ -60,7 +56,7 @@ def print_assistant_thoughts(assistant_reply):
         try:
             # Parse and print Assistant response
             assistant_reply_json = fix_and_parse_json(assistant_reply)
-        except json.JSONDecodeError as e:
+        except json.JSONDecodeError:
             logger.error("Error: Invalid JSON in assistant thoughts\n", assistant_reply)
             assistant_reply_json = attempt_to_fix_json_by_finding_outermost_brackets(assistant_reply)
             assistant_reply_json = fix_and_parse_json(assistant_reply_json)
@@ -69,7 +65,7 @@ def print_assistant_thoughts(assistant_reply):
         if isinstance(assistant_reply_json, str):
             try:
                 assistant_reply_json = json.loads(assistant_reply_json)
-            except json.JSONDecodeError as e:
+            except json.JSONDecodeError:
                 logger.error("Error: Invalid JSON\n", assistant_reply)
                 assistant_reply_json = attempt_to_fix_json_by_finding_outermost_brackets(assistant_reply_json)
 
@@ -109,13 +105,13 @@ def print_assistant_thoughts(assistant_reply):
             speak.say_text(assistant_thoughts_speak)
 
         return assistant_reply_json
-    except json.decoder.JSONDecodeError as e:
+    except json.decoder.JSONDecodeError:
         logger.error("Error: Invalid JSON\n", assistant_reply)
         if cfg.speak_mode:
             speak.say_text("I have received an invalid JSON response. I cannot ignore this response.")
 
     # All other errors, return "Error: + error message"
-    except Exception as e:
+    except Exception:
         call_stack = traceback.format_exc()
         logger.error("Error: \n", call_stack)
 
@@ -125,7 +121,7 @@ def construct_prompt():
     config = AIConfig.load()
     if config.ai_name:
         logger.typewriter_log(
-            f"Welcome back! ",
+            "Welcome back! ",
             Fore.GREEN,
             f"Would you like me to return to being {config.ai_name}?",
             speak_text=True)
@@ -237,14 +233,14 @@ def parse_arguments():
     if args.memory_type:
         supported_memory = get_supported_memory_backends()
         chosen = args.memory_type
-        if not chosen in supported_memory:
+        if chosen not in supported_memory:
             logger.typewriter_log("ONLY THE FOLLOWING MEMORY BACKENDS ARE SUPPORTED: ", Fore.RED, f'{supported_memory}')
-            logger.typewriter_log(f"Defaulting to: ", Fore.YELLOW, cfg.memory_backend)
+            logger.typewriter_log("Defaulting to: ", Fore.YELLOW, cfg.memory_backend)
         else:
             cfg.memory_backend = chosen
 
 
-def main():
+def main():  # noqa: C901
     global cfg, ai_name
 
     parse_arguments()
@@ -283,7 +279,7 @@ def main():
         chat.close()
         exit(1)
     else:
-        logger.typewriter_log("AI CONNECTED: ", Fore.YELLOW, 
+        logger.typewriter_log("AI CONNECTED: ", Fore.YELLOW,
                             assistant_reply_json.get("thoughts", {}).get("text", ""))
 
     user_input = "Determine which command in COMMANDS list to use first, and respond using the format specified before."

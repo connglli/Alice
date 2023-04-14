@@ -1,8 +1,8 @@
 """Base class for memory providers."""
 import abc
-from config import AbstractSingleton
-import sentence_transformers
 
+import sentence_transformers
+from config import AbstractSingleton
 
 FLAX_EMBED_MODEL = sentence_transformers.SentenceTransformer("flax-sentence-embeddings/all_datasets_v4_MiniLM-L6")
 FLAX_EMBED_DIM = 384

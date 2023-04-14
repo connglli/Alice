@@ -1,11 +1,10 @@
-import requests
 import io
 import os.path
-from PIL import Image
-from config import Config
 import uuid
-from base64 import b64decode
 
+import requests
+from config import Config
+from PIL import Image
 
 cfg = Config()
 working_directory = "auto_gpt_workspace"

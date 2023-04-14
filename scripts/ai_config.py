@@ -1,6 +1,7 @@
-import yaml
-import data
 import os
+
+import data
+import yaml
 
 
 class AIConfig:
@@ -13,7 +14,7 @@ class AIConfig:
         ai_goals (list): The list of objectives the AI is supposed to complete.
     """
 
-    def __init__(self, ai_name: str="", ai_role: str="", ai_goals: list=[]) -> None:
+    def __init__(self, ai_name: str="", ai_role: str="", ai_goals: list=[]) -> None:  # noqa: B006
         """
         Initialize a class instance
 

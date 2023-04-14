@@ -1,10 +1,10 @@
 import dataclasses
-import orjson
-from typing import Any, List, Optional
-import numpy as np
 import os
-from memory.base import MemoryProviderSingleton, get_flax_embedding, FLAX_EMBED_DIM
+from typing import Any, List, Optional
 
+import numpy as np
+import orjson
+from memory.base import FLAX_EMBED_DIM, MemoryProviderSingleton, get_flax_embedding
 
 EMBED_DIM = FLAX_EMBED_DIM
 SAVE_OPTIONS = orjson.OPT_SERIALIZE_NUMPY | orjson.OPT_SERIALIZE_DATACLASS

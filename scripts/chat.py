@@ -1,6 +1,5 @@
 import new_bing as nbing
 
-
 _role_desc = None
 _chatbot = None
 
@@ -44,7 +43,7 @@ def chat(user_input, full_message_history, permanent_memory):
     user_input (str): The input from the user.
     full_message_history (list): The list of all messages sent between the user and the AI.
     permanent_memory (Obj): The memory object containing the permanent memory.
-    
+
     Returns:
     str: The AI's response.
     """
@@ -53,10 +52,9 @@ def chat(user_input, full_message_history, permanent_memory):
     if len(full_message_history) > 0:
         question = f"{full_message_history[-1]['content']}\n\n" \
                    f"Based on the above information: {user_input}"
-        relevant_memory = permanent_memory.get_relevant(str(full_message_history[-5:]), 10)
+        permanent_memory.get_relevant(str(full_message_history[-5:]), 10)
     else:
         question = user_input
-        relevant_memory = []
 
     # TODO: leverage relevant memory, construct context
 

@@ -1,0 +1,7 @@
+repos:
+# Ruff for python code linting
+- repo: https://github.com/charliermarsh/ruff-pre-commit
+  rev: 'v0.0.260'
+  hooks:
+  - id: ruff
+    args: [ scripts ]

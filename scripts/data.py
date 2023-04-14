@@ -1,5 +1,5 @@
-import os
 from pathlib import Path
+
 
 def load_prompt():
     """Load the prompt from data/prompt.txt"""

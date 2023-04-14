@@ -1,10 +1,10 @@
 import re
-import requests
+from urllib.parse import urljoin, urlparse
+
 import new_bing as nbing
+import requests
 from bs4 import BeautifulSoup
 from config import Config
-from urllib.parse import urlparse, urljoin
-
 
 cfg = Config()
 

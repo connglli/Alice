@@ -1,7 +1,6 @@
 import os
 import os.path
 
-
 # Set a dedicated folder for file I/O
 working_directory = "auto_gpt_workspace"
 

@@ -1,6 +1,6 @@
 
 import pinecone
-from memory.base import MemoryProviderSingleton, get_flax_embedding, FLAX_EMBED_DIM
+from memory.base import FLAX_EMBED_DIM, MemoryProviderSingleton, get_flax_embedding
 
 
 class PineconeMemory(MemoryProviderSingleton):
@@ -23,7 +23,7 @@ class PineconeMemory(MemoryProviderSingleton):
     def add(self, data):
         vector = get_flax_embedding(data)
         # no metadata here. We may wish to change that long term.
-        resp = self.index.upsert([(str(self.vec_num), vector, {"raw_text": data})])
+        self.index.upsert([(str(self.vec_num), vector, {"raw_text": data})])
         _text = f"Inserting data into memory at index: {self.vec_num}:\n data: {data}"
         self.vec_num += 1
         return _text
