@@ -16,7 +16,7 @@ def ask_question(question, chatbot, conversation_style=EdgeGPT.ConversationStyle
     except KeyError:
         return response["item"]["messages"][1]["hiddenText"]
     except IndexError:
-        return "New Bing did not respond anything"
+        return "No response"
 
 
 def ask_question_once(question, conversation_style=EdgeGPT.ConversationStyle.creative) -> str:

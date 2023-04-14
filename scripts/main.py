@@ -319,6 +319,7 @@ def main():  # noqa: C901
                 "NEXT ACTION: ",
                 Fore.CYAN,
                 f"COMMAND = {Fore.CYAN}{command}{Style.RESET_ALL}  ARGUMENTS = {Fore.CYAN}{arguments}{Style.RESET_ALL}")
+            user_input = "GENERATE NEXT COMMAND JSON"
 
         # Execute command
         if command.startswith("error__"):
