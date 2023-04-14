@@ -131,10 +131,7 @@ def split_text(text, max_length=8192):
 
 def create_message(chunk, question):
     """Create a message for the user to summarize a chunk of text"""
-    return {
-        "role": "user",
-        "content": f"\"\"\"{chunk}\"\"\" Using the above text, please answer the following question: \"{question}\" -- if the question cannot be answered using the text, please summarize the text."
-    }
+    return f"\"\"\"\n{chunk}\n\"\"\"\n\nUsing the above text, answer the following question: \"{question}\". If the question cannot be answered using the text, summarize the text."
 
 
 def summarize_text(text, question):
@@ -150,16 +147,13 @@ def summarize_text(text, question):
 
     for i, chunk in enumerate(chunks):
         print(f"Summarizing chunk {i + 1} / {len(chunks)}")
-        messages = [create_message(chunk, question)]
 
-        summary = nbing.ask_messages(messages)
+        summary = nbing.ask_question_once(create_message(chunk, question))
         summaries.append(summary)
 
     print(f"Summarized {len(chunks)} chunks.")
 
     combined_summary = "\n".join(summaries)
-    messages = [create_message(combined_summary, question)]
-
-    final_summary = nbing.ask_messages(messages)
+    final_summary = nbing.ask_question_once(create_message(combined_summary, question))
 
     return final_summary

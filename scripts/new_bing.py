@@ -19,6 +19,13 @@ def ask_question(question, chatbot, conversation_style=EdgeGPT.ConversationStyle
         return "New Bing did not respond anything"
 
 
+def ask_question_once(question, conversation_style=EdgeGPT.ConversationStyle.creative) -> str:
+    chatbot = new_bot()
+    response = ask_question(question, chatbot, conversation_style=conversation_style)
+    close_bot(chatbot)
+    return response
+
+
 def ask_messages(messages, conversation_style=EdgeGPT.ConversationStyle.creative) -> str:
     question = ""
     for msg in messages:
