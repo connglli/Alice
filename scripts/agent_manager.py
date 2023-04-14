@@ -1,7 +1,8 @@
+from uuid import uuid4 as uuid
+
 import new_bing as nbing
 
-next_key = 0
-agents = {}  # key, (task, full_message_history)
+agents = {}  # key, (agent, task, full_message_history)
 
 
 def create_agent(task, prompt):
@@ -9,20 +10,19 @@ def create_agent(task, prompt):
     global next_key
     global agents
 
-    messages = [{"role": "user", "content": prompt}, ]
-
-    # Start New Bing instance
-    agent_reply = nbing.ask_messages(messages)
+    # Start a new agent
+    key = str(uuid())
+    agent = nbing.new_bot()
+    agent_reply = nbing.ask_question(prompt, agent)
 
     # Update full message history
-    messages.append({"role": "assistant", "content": agent_reply})
+    history = [
+        {"role": "user", "content": prompt},
+        {"role": "assistant", "content": agent_reply}
+    ]
 
-    key = next_key
-    # This is done instead of len(agents) to make keys unique even if agents
-    # are deleted
-    next_key += 1
-
-    agents[key] = (task, messages)
+    # Update agent dict
+    agents[key] = (agent, task, history)
 
     return key, agent_reply
 
@@ -31,16 +31,16 @@ def message_agent(key, message):
     """Send a message to an agent and return its response"""
     global agents
 
-    task, messages = agents[int(key)]
+    agent, _, history = agents[key]
 
     # Add user message to message history before sending to agent
-    messages.append({"role": "user", "content": message})
+    history.append({"role": "user", "content": message})
 
-    # Start New Bing instance
-    agent_reply = nbing.ask_messages(messages)
+    # Message the agent
+    agent_reply = nbing.ask_question(message, agent)
 
     # Update full message history
-    messages.append({"role": "assistant", "content": agent_reply})
+    history.append({"role": "assistant", "content": agent_reply})
 
     return agent_reply
 
@@ -50,7 +50,7 @@ def list_agents():
     global agents
 
     # Return a list of agent keys and their tasks
-    return [(key, task) for key, (task, _, _) in agents.items()]
+    return [(key, task) for key, (_, task, _) in agents.items()]
 
 
 def delete_agent(key):
@@ -58,7 +58,8 @@ def delete_agent(key):
     global agents
 
     try:
-        del agents[int(key)]
+        nbing.close_bot(agents[key][0])
+        del agents[key]
         return True
     except KeyError:
         return False
