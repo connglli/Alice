@@ -46,8 +46,7 @@ Your response must be provided exclusively in the RESPONSE JSON FORMAT outlined 
 RESPONSE FORMAT:
 
 {
-    "thoughts":
-    {
+    "thoughts": {
         "text": "thought",
         "reasoning": "reasoning",
         "plan": "- short bulleted\n- list that conveys\n- long-term plan",
@@ -56,7 +55,7 @@ RESPONSE FORMAT:
     },
     "command": {
         "name": "command name",
-        "args":{
+        "args": {
             "arg name": "value"
         }
     }
