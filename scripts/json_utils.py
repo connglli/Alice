@@ -1,9 +1,7 @@
 import json
 import re
 
-from config import Config
-
-cfg = Config()
+from logger import logger
 
 
 def extract_char_position(error_message: str) -> int:
@@ -89,9 +87,8 @@ def fix_invalid_escape(json_str: str, error_message: str) -> str:
             json.loads(json_str)
             return json_str
         except json.JSONDecodeError as e:
-            if cfg.debug_mode:
-                print('json loads error - fix invalid escape', e)
             error_message = str(e)
+            logger.debug(f"JSON loads error - fix invalid escape: {error_message}")
     return json_str
 
 
@@ -102,16 +99,13 @@ def correct_json(json_str: str) -> str:
     Args:
         json_str (str): The JSON string.
     """
-
     try:
-        if cfg.debug_mode:
-            print("json", json_str)
+        logger.debug(f"JSON to correct: {json_str}")
         json.loads(json_str)
         return json_str
     except json.JSONDecodeError as e:
-        if cfg.debug_mode:
-            print('json loads error', e)
         error_message = str(e)
+        logger.debug(f"JSON loads error: {error_message}")
         if error_message.startswith('Invalid \\escape'):
             json_str = fix_invalid_escape(json_str, error_message)
         if error_message.startswith('Expecting property name enclosed in double quotes'):
@@ -120,9 +114,8 @@ def correct_json(json_str: str) -> str:
                 json.loads(json_str)
                 return json_str
             except json.JSONDecodeError as e:
-                if cfg.debug_mode:
-                    print('json loads error - add quotes', e)
                 error_message = str(e)
+                logger.debug(f"JSON loads error - add quotes: {error_message}")
         if balanced_str := balance_braces(json_str):
             return balanced_str
     return json_str

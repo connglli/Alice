@@ -4,13 +4,15 @@ import logging
 import traceback
 
 import chat
-import commands as cmd
 import speak
 import utils
 from ai_config import AIConfig
 from colorama import Fore, Style
+from commands import execute_command
 from config import Config
-from json_parser import fix_and_parse_json
+from json_parser import (
+    fix_and_parse_json,
+)
 from logger import logger
 from memory import get_memory, get_supported_memory_backends
 from spinner import Spinner
@@ -19,101 +21,38 @@ cfg = Config()
 ai_name = ""
 
 
-def attempt_to_fix_json_by_finding_outermost_brackets(json_string):
-    if cfg.speak_mode and cfg.debug_mode:
-      speak.say_text("I have received an invalid JSON response. Trying to fix it now.")
-    logger.typewriter_log("Attempting to fix JSON by finding outermost brackets")
-
-    try:
-        # Use regex to search for JSON objects
-        import regex
-        json_pattern = regex.compile(r"\{(?:[^{}]|(?R))*\}")
-        json_match = json_pattern.search(json_string)
-
-        if json_match:
-            # Extract the valid JSON object from the string
-            json_string = json_match.group(0)
-            logger.typewriter_log(title="Apparently json was fixed.", title_color=Fore.GREEN)
-            if cfg.speak_mode and cfg.debug_mode:
-               speak.say_text("Apparently json was fixed.")
-        else:
-            raise ValueError("No valid JSON object found")
-
-    except (json.JSONDecodeError, ValueError):
-        if cfg.speak_mode:
-            speak.say_text("Didn't work. I will have to ignore this response then.")
-        logger.error("Error: Invalid JSON, setting it to empty JSON now.")
-        json_string = {}
-
-    return json_string
-
-
-def print_assistant_thoughts(assistant_reply):  # noqa: C901
+def print_assistant_thoughts(assistant_thoughts):
     """Prints the assistant's thoughts to the console"""
     global ai_name
     global cfg
-    try:
-        try:
-            # Parse and print Assistant response
-            assistant_reply_json = fix_and_parse_json(assistant_reply)
-        except json.JSONDecodeError:
-            logger.error("Error: Invalid JSON in assistant thoughts\n", assistant_reply)
-            assistant_reply_json = attempt_to_fix_json_by_finding_outermost_brackets(assistant_reply)
-            assistant_reply_json = fix_and_parse_json(assistant_reply_json)
 
-        # Check if assistant_reply_json is a string and attempt to parse it into a JSON object
-        if isinstance(assistant_reply_json, str):
-            try:
-                assistant_reply_json = json.loads(assistant_reply_json)
-            except json.JSONDecodeError:
-                logger.error("Error: Invalid JSON\n", assistant_reply)
-                assistant_reply_json = attempt_to_fix_json_by_finding_outermost_brackets(assistant_reply_json)
+    assistant_thoughts_text = assistant_thoughts.get("text")
+    assistant_thoughts_reasoning = assistant_thoughts.get("reasoning")
+    assistant_thoughts_plan = assistant_thoughts.get("plan")
+    assistant_thoughts_criticism = assistant_thoughts.get("criticism")
+    assistant_thoughts_speak = assistant_thoughts.get("speak")
 
-        assistant_thoughts_reasoning = None
-        assistant_thoughts_plan = None
-        assistant_thoughts_speak = None
-        assistant_thoughts_criticism = None
-        assistant_thoughts = assistant_reply_json.get("thoughts", {})
-        assistant_thoughts_text = assistant_thoughts.get("text")
+    logger.typewriter_log(f"{ai_name.upper()} THOUGHTS:", Fore.YELLOW, assistant_thoughts_text)
+    logger.typewriter_log("REASONING:", Fore.YELLOW, assistant_thoughts_reasoning)
 
-        if assistant_thoughts:
-            assistant_thoughts_reasoning = assistant_thoughts.get("reasoning")
-            assistant_thoughts_plan = assistant_thoughts.get("plan")
-            assistant_thoughts_criticism = assistant_thoughts.get("criticism")
-            assistant_thoughts_speak = assistant_thoughts.get("speak")
+    if assistant_thoughts_plan:
+        logger.typewriter_log("PLAN:", Fore.YELLOW, "")
+        # If it's a list, join it into a string
+        if isinstance(assistant_thoughts_plan, list):
+            assistant_thoughts_plan = "\n".join(assistant_thoughts_plan)
+        elif isinstance(assistant_thoughts_plan, dict):
+            assistant_thoughts_plan = str(assistant_thoughts_plan)
 
-        logger.typewriter_log(f"{ai_name.upper()} THOUGHTS:", Fore.YELLOW, assistant_thoughts_text)
-        logger.typewriter_log("REASONING:", Fore.YELLOW, assistant_thoughts_reasoning)
+        # Split the input_string using the newline character and dashes
+        lines = assistant_thoughts_plan.split('\n')
+        for line in lines:
+            line = line.lstrip("- ")
+            logger.typewriter_log("- ", Fore.GREEN, line.strip())
 
-        if assistant_thoughts_plan:
-            logger.typewriter_log("PLAN:", Fore.YELLOW, "")
-            # If it's a list, join it into a string
-            if isinstance(assistant_thoughts_plan, list):
-                assistant_thoughts_plan = "\n".join(assistant_thoughts_plan)
-            elif isinstance(assistant_thoughts_plan, dict):
-                assistant_thoughts_plan = str(assistant_thoughts_plan)
-
-            # Split the input_string using the newline character and dashes
-            lines = assistant_thoughts_plan.split('\n')
-            for line in lines:
-                line = line.lstrip("- ")
-                logger.typewriter_log("- ", Fore.GREEN, line.strip())
-
-        logger.typewriter_log("CRITICISM:", Fore.YELLOW, assistant_thoughts_criticism)
-        # Speak the assistant's thoughts
-        if cfg.speak_mode and assistant_thoughts_speak:
-            speak.say_text(assistant_thoughts_speak)
-
-        return assistant_reply_json
-    except json.decoder.JSONDecodeError:
-        logger.error("Error: Invalid JSON\n", assistant_reply)
-        if cfg.speak_mode:
-            speak.say_text("I have received an invalid JSON response. I cannot ignore this response.")
-
-    # All other errors, return "Error: + error message"
-    except Exception:
-        call_stack = traceback.format_exc()
-        logger.error("Error: \n", call_stack)
+    logger.typewriter_log("CRITICISM:", Fore.YELLOW, assistant_thoughts_criticism)
+    # Speak the assistant's thoughts
+    if cfg.speak_mode and assistant_thoughts_speak:
+        speak.say_text(assistant_thoughts_speak)
 
 
 def construct_prompt():
@@ -240,6 +179,37 @@ def parse_arguments():
             cfg.memory_backend = chosen
 
 
+def parse_assistant_reply(assistant_reply):
+    try:
+        assistant_reply_json = fix_and_parse_json(assistant_reply)
+
+    # JSON Decoding error
+    except json.decoder.JSONDecodeError:
+        logger.error("Error: Invalid JSON\n", assistant_reply)
+        return None, "error__json_decode_error", "Invalid JSON object. Your response must adhere to the RESPONSE JSON FORMAT format."
+
+    # All other errors, return "Error: + error message"
+    except Exception as e:
+        call_stack = traceback.format_exc()
+        logger.error(f"Error: {e}\n", call_stack)
+        return None, "error__other_exceptions", f"{e}. Your response must adhere to the RESPONSE JSON FORMAT format."
+
+    # Received JSON object
+    else:
+        thoughts = assistant_reply_json.get("thoughts")
+
+        if "command" not in assistant_reply_json:
+            return thoughts, "error__no_command" , "Missing 'command' object in JSON. Your response must adhere to the RESPONSE JSON FORMAT format."
+
+        command = assistant_reply_json["command"]
+        if "name" not in command:
+            return thoughts, "error__no_command_name", "Missing 'name' field in 'command' object. Your response must adhere to the RESPONSE JSON FORMAT format."
+
+        # Use an empty dictionary if 'args' field is not present in 'command' object
+        return thoughts, command["name"], command.get("args", {})
+
+
+
 def main():  # noqa: C901
     global cfg, ai_name
 
@@ -262,46 +232,35 @@ def main():  # noqa: C901
 
     # Connect and initialize our AI
     with Spinner("Connecting to AI assistant..."):
-        try:
-            assistant_reply = chat.conn(prompt)
-        except Exception as e:
-            assistant_reply_json = e
-        else:
-            assistant_reply_json = fix_and_parse_json(assistant_reply)
-            if not isinstance(assistant_reply_json, dict):
-                assistant_reply_json = {
-                    "thoughts": {
-                        "text": assistant_reply_json
-                    }
-                }
-    if isinstance(assistant_reply_json, Exception):
-        logger.typewriter_log("AI CONNECTION FAILED: ", Fore.RED, str(assistant_reply_json))
-        chat.close()
-        exit(1)
-    else:
-        logger.typewriter_log("AI CONNECTED: ", Fore.YELLOW,
-                            assistant_reply_json.get("thoughts", {}).get("text", ""))
+        assistant_reply = chat.conn(prompt)
 
-    user_input = "Determine which command in COMMANDS list to use first, and respond using the format specified before."
+    thoughts, command, arguments = parse_assistant_reply(assistant_reply)
+
+    if command.startswith("error__"):
+        logger.typewriter_log("AI CONNECTION FAILED: ", Fore.RED, arguments)
+        chat.close()
+        return
+    else:
+        thoughts = {} if thoughts is None else thoughts
+        logger.typewriter_log("AI CONNECTED: ", Fore.YELLOW, thoughts.get("text", ""))
+
+    # Run human-AI interaction Loop
+    user_input = "Determine which command in COMMANDS list to use first, and respond using the format specified by RESPONSE JSON FORMAT."
     cmd_result = None
     nr_next_actions = 0
 
-    # Interaction Loop
     while True:
         # Send message to AI, get response
         with Spinner("Thinking... "):
             assistant_reply = chat.chat(user_input, full_message_history, long_term_memory)
 
-        # Print Assistant thoughts
-        print_assistant_thoughts(assistant_reply)
+        thoughts, command, arguments = parse_assistant_reply(assistant_reply)
 
-        # Get command name and arguments
-        try:
-            command_name, arguments = cmd.get_command(attempt_to_fix_json_by_finding_outermost_brackets(assistant_reply))
-            if cfg.speak_mode:
-                speak.say_text(f"I want to execute {command_name}")
-        except Exception as e:
-            logger.error("Error: \n", str(e))
+        if thoughts is not None:
+            print_assistant_thoughts(thoughts)
+
+        if cfg.speak_mode:
+            speak.say_text(f"I want to execute {command}")
 
         if not cfg.continuous_mode and nr_next_actions == 0:
             ### GET USER AUTHORIZATION TO EXECUTE COMMAND ###
@@ -311,7 +270,7 @@ def main():  # noqa: C901
             logger.typewriter_log(
                 "NEXT ACTION: ",
                 Fore.CYAN,
-                f"COMMAND = {Fore.CYAN}{command_name}{Style.RESET_ALL}  ARGUMENTS = {Fore.CYAN}{arguments}{Style.RESET_ALL}")
+                f"COMMAND = {Fore.CYAN}{command}{Style.RESET_ALL}  ARGUMENTS = {Fore.CYAN}{arguments}{Style.RESET_ALL}")
             print(
                 f"Enter 'y' to authorise command, 'y -N' to run N continuous commands, 'n' to exit program, or enter feedback for {ai_name}...",
                 flush=True)
@@ -333,7 +292,7 @@ def main():  # noqa: C901
                     break
                 else:
                     user_input = console_input
-                    command_name = "human_feedback"
+                    command = "human_feedback"
                     break
 
             if user_input == "GENERATE NEXT COMMAND JSON":
@@ -349,31 +308,26 @@ def main():  # noqa: C901
             logger.typewriter_log(
                 "NEXT ACTION: ",
                 Fore.CYAN,
-                f"COMMAND = {Fore.CYAN}{command_name}{Style.RESET_ALL}  ARGUMENTS = {Fore.CYAN}{arguments}{Style.RESET_ALL}")
+                f"COMMAND = {Fore.CYAN}{command}{Style.RESET_ALL}  ARGUMENTS = {Fore.CYAN}{arguments}{Style.RESET_ALL}")
 
         # Execute command
-        if command_name is not None and command_name.lower().startswith( "error" ):
-            cmd_result = f"Command \"{command_name}\" threw the following error: " + arguments
-        elif command_name == "human_feedback":
-            cmd_result = f"Human feedback: {user_input}"
+        if command.startswith("error__"):
+            cmd_result = f"Error generated: {arguments}"
+        elif command == "human_feedback":
+            cmd_result = f"Human feedback received: {user_input}"
         else:
-            cmd_result = f"Command \"{command_name}\" returned: {cmd.execute_command(command_name, arguments)}"
+            cmd_result = f"Command \"{command}\" returned: {execute_command(command, arguments)}"
             if nr_next_actions > 0:
                 nr_next_actions -= 1
 
+        # Add to our long_term memory
         long_term_memory.add(f"Assistant Reply: {assistant_reply} \n" \
                              f"Command Result: {cmd_result} \n" \
                              f"Human Feedback: {user_input} ")
 
-        # Check if there's a result from the command append it to the message history
-        if cmd_result is not None:
-            full_message_history.append(chat.create_chat_message("system", cmd_result))
-            logger.typewriter_log("SYSTEM: ", Fore.YELLOW, cmd_result)
-        else:
-            full_message_history.append(
-                chat.create_chat_message(
-                    "system", "Unable to execute command"))
-            logger.typewriter_log("SYSTEM: ", Fore.YELLOW, "Unable to execute command")
+        # Append it to the message history
+        full_message_history.append(chat.create_chat_message("system", cmd_result))
+        logger.typewriter_log("SYSTEM: ", Fore.YELLOW, cmd_result)
 
     chat.close()
 

@@ -16,7 +16,6 @@ from file_operations import (
     write_to_file,
 )
 from image_gen import generate_image
-from json_parser import fix_and_parse_json
 from memory import get_memory
 
 cfg = Config()
@@ -28,32 +27,6 @@ def is_valid_int(value):
         return True
     except ValueError:
         return False
-
-
-def get_command(response):
-    """Parse the response and return the command name and arguments"""
-    try:
-        response_json = fix_and_parse_json(response)
-
-        if "command" not in response_json:
-            return "Error:" , "Missing 'command' object in JSON"
-
-        command = response_json["command"]
-
-        if "name" not in command:
-            return "Error:", "Missing 'name' field in 'command' object"
-
-        command_name = command["name"]
-
-        # Use an empty dictionary if 'args' field is not present in 'command' object
-        arguments = command.get("args", {})
-
-        return command_name, arguments
-    except json.decoder.JSONDecodeError:
-        return "Error:", "Invalid JSON"
-    # All other errors, return "Error: + error message"
-    except Exception as e:
-        return "Error:", str(e)
 
 
 def execute_command(command_name, arguments):  # noqa: C901
