@@ -32,6 +32,11 @@ To install Alice, follow these steps:
 
 3. Rename `.env.template` to `.env` and fill in your `NEW_BING_COOKIES_PATH`. Check [EdgeGPT](https://github.com/acheong08/EdgeGPT) on how to fetch your cookies.
 
+4. *Optional*. Install pre-commit for git:
+
+   ```
+   pre-commit install
+   ```
 
 ## Usage
 
