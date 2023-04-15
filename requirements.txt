@@ -17,3 +17,4 @@ EdgeGPT==0.1.22.1
 sentence_transformers==2.2.2
 pre-commit==3.2.2
 ruff==0.0.261
+poe-api

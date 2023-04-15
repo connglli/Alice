@@ -1,4 +1,4 @@
-import new_bing as nbing
+import quora_poe as poe
 from config import Config
 
 cfg = Config()
@@ -12,14 +12,15 @@ def call_ai_function(function, args, description):
     args = [str(arg) if arg is not None else "None" for arg in args]
     # parse args to comma seperated string
     args = ", ".join(args)
-    messages = [
-        {
-            "role": "system",
-            "content": f"You are now the following python function: ```# {description}\n{function}```\n\nOnly respond with your `return` value.",
-        },
-        {"role": "user", "content": args},
-    ]
+    message = f"""You are now the following python function:
 
-    response = nbing.ask_messages(messages)
+```
+# {description}
+{function}
+```
+
+Only respond with your `return` value, without any exceptions. Any additional text, explanations, or apologies outside `return` value will not be accepted."""
+
+    response = poe.send_message_once(message, is_code_related_task=True)
 
     return response

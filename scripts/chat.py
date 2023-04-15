@@ -1,4 +1,4 @@
-import new_bing as nbing
+import quora_poe as poe
 
 _role_desc = None
 _chatbot = None
@@ -31,8 +31,8 @@ def conn(role_desc):
     global _chatbot
     assert _chatbot is None, "Chat AI is already connected"
     _role_desc = role_desc
-    _chatbot = nbing.new_bot()
-    return nbing.ask_question(_role_desc, _chatbot)
+    _chatbot = poe.new_bot()
+    return poe.send_message(_role_desc, _chatbot)
 
 
 def chat(user_input, full_message_history, permanent_memory):
@@ -58,8 +58,8 @@ def chat(user_input, full_message_history, permanent_memory):
 
     # TODO: leverage relevant memory, construct context
 
-    # Chat with New Bing assistant to get the reply
-    assistant_reply = nbing.ask_question(question, _chatbot)
+    # Chat with our AI assistant to get the reply
+    assistant_reply = poe.send_message(question, _chatbot)
 
     # Update full message history
     full_message_history.append(
@@ -75,4 +75,4 @@ def chat(user_input, full_message_history, permanent_memory):
 def close():
     global _chatbot
     assert _chatbot is not None, "Chat AI is not yet connected"
-    nbing.close_bot(_chatbot)
+    poe.close_bot(_chatbot)

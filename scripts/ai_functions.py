@@ -18,7 +18,7 @@ def evaluate_code(code: str) -> List[str]:
     """
 
     function_string = "def analyze_code(code: str) -> List[str]:"
-    args = [code]
+    args = ["code=" + code]
     description_string = """Analyzes the given code and returns a list of suggestions for improvements."""
 
     result_string = call_ai_function(function_string, args, description_string)
@@ -40,7 +40,7 @@ def improve_code(suggestions: List[str], code: str) -> str:
     function_string = (
         "def generate_improved_code(suggestions: List[str], code: str) -> str:"
     )
-    args = [json.dumps(suggestions), code]
+    args = ["suggestions=" + json.dumps(suggestions), "code=" + code]
     description_string = """Improves the provided code based on the suggestions provided, making no other changes."""
 
     result_string = call_ai_function(function_string, args, description_string)
@@ -61,7 +61,7 @@ def write_tests(code: str, focus: List[str]) -> str:
     function_string = (
         "def create_test_cases(code: str, focus: Optional[str] = None) -> str:"
     )
-    args = [code, json.dumps(focus)]
+    args = ["code=" + code, "focus=" + json.dumps(focus)]
     description_string = """Generates test cases for the existing code, focusing on specific areas if required."""
 
     result_string = call_ai_function(function_string, args, description_string)

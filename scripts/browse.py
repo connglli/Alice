@@ -1,7 +1,7 @@
 import re
 from urllib.parse import urljoin, urlparse
 
-import new_bing as nbing
+import quora_poe as poe
 import requests
 from bs4 import BeautifulSoup
 from config import Config
@@ -131,11 +131,15 @@ def split_text(text, max_length=8192):
 
 def create_message(chunk, question):
     """Create a message for the user to summarize a chunk of text"""
-    return f"\"\"\"\n{chunk}\n\"\"\"\n\nUsing the above text, answer the following question: \"{question}\". If the question cannot be answered using the text, summarize the text."
+    return f"""\"\"\"
+{chunk}
+\"\"\"
+
+Using the above text, answer the following question: \"{question}\". If the question cannot be answered using the text, summarize the text."""
 
 
 def summarize_text(text, question):
-    """Summarize text using New Bing"""
+    """Summarize text using AI assistant"""
     if not text:
         return "Error: No text to summarize"
 
@@ -148,12 +152,12 @@ def summarize_text(text, question):
     for i, chunk in enumerate(chunks):
         print(f"Summarizing chunk {i + 1} / {len(chunks)}")
 
-        summary = nbing.ask_question_once(create_message(chunk, question))
+        summary = poe.send_message_once(create_message(chunk, question))
         summaries.append(summary)
 
     print(f"Summarized {len(chunks)} chunks.")
 
     combined_summary = "\n".join(summaries)
-    final_summary = nbing.ask_question_once(create_message(combined_summary, question))
+    final_summary = poe.send_message_once(create_message(combined_summary, question))
 
     return final_summary

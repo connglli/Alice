@@ -41,6 +41,8 @@ class Config(metaclass=Singleton):
         self.new_bing_token_limit = 4000
         self.new_bing_cookies_path = os.getenv("NEW_BING_COOKIES_PATH")
 
+        self.poe_p_b_cookie_token = os.getenv("POE_P_B_COOKIE_TOKEN")
+
         self.elevenlabs_api_key = os.getenv("ELEVENLABS_API_KEY")
         self.elevenlabs_voice_1_id = os.getenv("ELEVENLABS_VOICE_1_ID")
         self.elevenlabs_voice_2_id = os.getenv("ELEVENLABS_VOICE_2_ID")
@@ -82,6 +84,14 @@ class Config(metaclass=Singleton):
     def set_speak_mode(self, value: bool):
         """Set the speak mode value."""
         self.speak_mode = value
+
+    def setnew_bing_cookies_path(self, value: str):
+        """Set the New Bing cookie path value."""
+        self.new_bing_cookies_path = value
+
+    def set_poe_p_b_cookie_token(self, value: str):
+        """Set the Poe p-b cookie token value."""
+        self.poe_p_b_cookie_token = value
 
     def set_elevenlabs_api_key(self, value: str):
         """Set the ElevenLabs API key value."""
