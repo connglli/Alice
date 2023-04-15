@@ -239,7 +239,7 @@ def start_agent(name, task, prompt):
     # Remove underscores from name
     voice_name = name.replace("_", " ")
 
-    first_message = f"""You are {name}.  Respond with: "Acknowledged"."""
+    first_message = f"""You are {name}. Your task is: {task}."""
     agent_intro = f"{voice_name} here, Reporting for duty!"
 
     # Create agent

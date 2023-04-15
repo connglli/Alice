@@ -12,9 +12,12 @@ def new_bot():
 def ask_question(question, chatbot, conversation_style=EdgeGPT.ConversationStyle.creative) -> str:
     response = asyncio.run(chatbot.ask(question, conversation_style=conversation_style))
     try:
-        return response["item"]["messages"][1]["text"]
+        return response["item"]["messages"][1]["text"]  # TODO: Check "firstNewMessageIndex"
     except KeyError:
-        return response["item"]["messages"][1]["hiddenText"]
+        try:
+            return response["item"]["messages"][1]["hiddenText"]
+        except KeyError:
+            return "No response"
     except IndexError:
         return "No response"
 
