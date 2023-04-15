@@ -18,12 +18,10 @@ from memory import get_memory, get_supported_memory_backends
 from spinner import Spinner
 
 cfg = Config()
-ai_name = ""
 
 
-def print_assistant_thoughts(assistant_thoughts):
+def print_assistant_thoughts(ai_name, assistant_thoughts):
     """Prints the assistant's thoughts to the console"""
-    global ai_name
     global cfg
 
     assistant_thoughts_text = assistant_thoughts.get("text")
@@ -73,18 +71,14 @@ Continue (y/n): """)
             config = AIConfig()
 
     if not config.ai_name:
-        config = prompt_user()
+        config = construct_ai_config_from_user()
         config.save()
 
-    # TODO: Get rid of this global
-    global ai_name
-    ai_name = config.ai_name
-
     full_prompt = config.construct_full_prompt()
-    return full_prompt
+    return config.ai_name, full_prompt
 
 
-def prompt_user():
+def construct_ai_config_from_user():
     """Prompt the user for input"""
     ai_name = ""
     # Construct the prompt
@@ -180,6 +174,7 @@ def parse_arguments():
 
 
 def parse_assistant_reply(assistant_reply):
+    """Parse assistant reply to thoughts, commands, and arguments"""
     FORMAT_ENFORCEMENT = "Your response must adhere to the RESPONSE JSON FORMAT format"
 
     try:
@@ -219,42 +214,9 @@ def parse_assistant_reply(assistant_reply):
         return thoughts, command["name"], command.get("args", {})
 
 
+def run_loop(ai_name, long_term_memory, full_message_history):  # noqa: C901
+    global cfg
 
-def main():  # noqa: C901
-    global cfg, ai_name
-
-    parse_arguments()
-    logger.set_level(logging.DEBUG if cfg.debug_mode else logging.INFO)
-
-    prompt = construct_prompt()
-    if cfg.debug_mode:
-        logger.typewriter_log("SYSTEM: ", Fore.YELLOW, prompt)
-
-    # Initialize variables
-    full_message_history = []
-
-    # Make a constant
-
-    # Initialize memory and make sure it is empty.
-    # this is particularly important for indexing and referencing pinecone memory
-    long_term_memory = get_memory(cfg, init=True)
-    print('Using memory of type: ' + long_term_memory.__class__.__name__)
-
-    # Connect and initialize our AI
-    with Spinner("Connecting to AI assistant..."):
-        assistant_reply = chat.conn(prompt)
-
-    thoughts, command, arguments = parse_assistant_reply(assistant_reply)
-
-    if command.startswith("error__"):
-        logger.typewriter_log("AI CONNECTION FAILED: ", Fore.RED, arguments)
-        chat.close()
-        return
-    else:
-        thoughts = {} if thoughts is None else thoughts
-        logger.typewriter_log("AI CONNECTED: ", Fore.YELLOW, thoughts.get("text", ""))
-
-    # Run human-AI interaction Loop
     user_input = "Determine which command in COMMANDS list to use first, and respond using the format specified by RESPONSE JSON FORMAT."
     cmd_result = None
     nr_next_actions = 0
@@ -267,7 +229,7 @@ def main():  # noqa: C901
         thoughts, command, arguments = parse_assistant_reply(assistant_reply)
 
         if thoughts is not None:
-            print_assistant_thoughts(thoughts)
+            print_assistant_thoughts(ai_name, thoughts)
 
         if cfg.speak_mode:
             speak.say_text(f"I want to execute {command}")
@@ -285,7 +247,7 @@ def main():  # noqa: C901
                 f"Enter 'y' to authorise command, 'y -N' to run N continuous commands, 'n' to exit program, or enter feedback for {ai_name}...",
                 flush=True)
             while True:
-                console_input = utils.clean_input(Fore.MAGENTA + "Input: " + Style.RESET_ALL)
+                console_input = input(Fore.MAGENTA + "Input: " + Style.RESET_ALL)
                 if console_input.lower().rstrip() == "y":
                     user_input = "GENERATE NEXT COMMAND JSON"
                     break
@@ -340,7 +302,46 @@ def main():  # noqa: C901
         full_message_history.append(chat.create_chat_message("system", cmd_result))
         logger.typewriter_log("SYSTEM: ", Fore.YELLOW, cmd_result)
 
-    chat.close()
+
+def main():
+    global cfg
+
+    parse_arguments()
+    logger.set_level(logging.DEBUG if cfg.debug_mode else logging.INFO)
+
+    ai_name, prompt = construct_prompt()
+    if cfg.debug_mode:
+        logger.typewriter_log("SYSTEM: ", Fore.YELLOW, prompt)
+
+    # Initialize overall human-ai-system chat history
+    full_message_history = []
+
+    # Initialize memory and make sure it is empty.
+    # this is particularly important for indexing and referencing pinecone memory
+    long_term_memory = get_memory(cfg, init=True)
+    print('Using memory of type: ' + long_term_memory.__class__.__name__)
+
+    # Connect and initialize our AI
+    with Spinner("Connecting to AI assistant..."):
+        assistant_reply = chat.conn(prompt)
+
+    thoughts, command, arguments = parse_assistant_reply(assistant_reply)
+
+    if command.startswith("error__"):
+        logger.typewriter_log("AI CONNECTION FAILED: ", Fore.RED, arguments)
+        chat.close()
+        return
+    else:
+        thoughts = {} if thoughts is None else thoughts
+        logger.typewriter_log("AI CONNECTED: ", Fore.YELLOW, thoughts.get("text", ""))
+
+    try:
+        # Run human-AI interaction loop
+        run_loop(ai_name, long_term_memory, full_message_history)
+    finally:
+        print("You interrupted Alice")
+        print("Quitting...")
+        chat.close()
 
 
 if __name__ == '__main__':
